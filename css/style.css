@@ -1,0 +1,6 @@
+/* Base Structure */
+
+/* Move down content to allow for fixed Navbar */
+body{
+    padding-top: 50px;
+}
