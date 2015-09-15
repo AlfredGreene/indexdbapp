@@ -26,24 +26,22 @@ $(document).ready(function(){
 	};
 });
 
-
-// Add customer
+//Add Customer
 function addCustomer(){
-    var name = $('#name').val();
+	var name = $('#name').val();
 	var email = $('#email').val();
 	
 	var transaction = db.transaction(["customers"],"readwrite");
-	
-	// Ask for objectstore
+	//Ask for ObjectStore
 	var store = transaction.objectStore("customers");
 	
-	// Define customer
+	//Define Customer
 	var customer = {
 		name: name,
 		email: email
 	};
 	
-	// Perform the customer addition
+	//Perform the Add
 	var request = store.add(customer);
 	
 	//Success
@@ -56,33 +54,27 @@ function addCustomer(){
 		alert("Sorry, the customer was not added");
 		console.log('Error', e.target.error.name);
 	};
-	
 }
 
-
-// Display customers
+//Display Customers
 function showCustomers(e){
-    var transaction = db.transaction(["customers"],"readonly");
-    
-    // Ask for objectstore
-    var store = transaction.objectStore("customers");
+	var transaction = db.transaction(["customers"],"readonly");
+	//Ask for ObjectStore
+	var store = transaction.objectStore("customers");
 	var index = store.index('name');
 	
 	var output = '';
-	
-	index.openCursor = function(e){
-	    var cursor = e.target.result;
-	    
-	    if(cursor){
+	index.openCursor().onsuccess = function(e){
+		var cursor = e.target.result;
+		if(cursor){
 			output += "<tr id='customer_"+cursor.value.id+"'>";
 			output += "<td>"+cursor.value.id+"</td>";
-			output += "<td><span class='cursor customer'>"+cursor.value.name+"</span></td>";
-			output += "<td><span class='cursor customer'>"+cursor.value.email+"</span></td>";
-			output += "<td><a href=''>Delete</a></td>";
+			output += "<td><span class='cursor customer' contenteditable='true' data-field='name' data-id='"+cursor.value.id+"'>"+cursor.value.name+"</span></td>";
+			output += "<td><span class='cursor customer' contenteditable='true' data-field='email' data-id='"+cursor.value.id+"'>"+cursor.value.email+"</span></td>";
+			output += "<td><a onclick='removeCustomer("+cursor.value.id+")' href=''>Delete</a></td>";
 			output += "</tr>";
 			cursor.continue();
 		}
-		
 		$('#customers').html(output);
 	};
 }
@@ -108,12 +100,48 @@ function removeCustomer(id){
 	};
 }
 
-// Clear all customers
+//Clear ALL Customers
 function clearCustomers(){
 	indexedDB.deleteDatabase('customermanager');
 	window.location.href="index.html";
 }
 
+//Update Customers
+$('#customers').on('blur','.customer',function(){
+	//Newly entered text
+	var newText = $(this).html();
+	//Field
+	var field = $(this).data('field');
+	//Customer ID
+	var id = $(this).data('id');
+	
+	//Get Transaction
+	var transaction = db.transaction(["customers"],"readwrite");
+	//Ask for ObjectStore
+	var store = transaction.objectStore("customers");
+	
+	var request = store.get(id);
+	
+	request.onsuccess = function(){
+		var data = request.result;
+		if(field == 'name'){
+			data.name = newText;
+		} else if(field == 'email'){
+			data.email = newText;
+		}
+		
+		//Store Updated Text
+		var requestUpdate = store.put(data);
+		
+		requestUpdate.onsuccess = function(){
+			console.log('Customer field updated...');
+		};
+		
+		requestUpdate.onerror = function(){
+			console.log('Error: Customer field NOT updated...');
+		};
+	};
+});
 
 
 
