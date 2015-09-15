@@ -1,29 +1,29 @@
 $(document).ready(function(){
-    // Open a database
-    var request = indexedDB.open('customermanager',1);
-    
-    request.onupgradeneeded = function(e){
-        var db = e.target.result;
-        
-        if(!db.objectStoreNames.contains('customers')){
+	//Open Database
+	var request = indexedDB.open('customermanager',1);
+	
+	request.onupgradeneeded = function(e){
+		var db = e.target.result;
+		
+		if(!db.objectStoreNames.contains('customers')){
 			var os = db.createObjectStore('customers',{keyPath: "id", autoIncrement:true});
-        
-            //Create Index for Name
-    			os.createIndex('name','name',{unique:false});
-    		}
-	    };
-        
-        //Success
-    	request.onsuccess = function(e){
-    		console.log('Success: Opened Database...');
-    		db = e.target.result;
-    		showCustomers();
-    	};
-    	
-    	//Error
-    	request.onerror = function(e){
-    		console.log('Error: Could Not Open Database...');
-    	};
+			//Create Index for Name
+			os.createIndex('name','name',{unique:false});
+		}
+	};
+	
+	//Success
+	request.onsuccess = function(e){
+		console.log('Success: Opened Database...');
+		db = e.target.result;
+		//Show Customers
+		showCustomers();
+	};
+	
+	//Error
+	request.onerror = function(e){
+		console.log('Error: Could Not Open Database...');
+	};
 });
 
 
@@ -86,3 +86,34 @@ function showCustomers(e){
 		$('#customers').html(output);
 	};
 }
+
+//Delete A Customer
+function removeCustomer(id){
+	var transaction = db.transaction(["customers"],"readwrite");
+	//Ask for ObjectStore
+	var store = transaction.objectStore("customers");
+	
+	var request = store.delete(id);
+	
+	//Success
+	request.onsuccess = function(){
+		console.log('customer '+id+' Deleted');
+		$('.customer_'+id).remove();
+	};
+	
+	//Error
+	request.onerror = function(e){
+		alert("Sorry, the customer was not removed");
+		console.log('Error', e.target.error.name);
+	};
+}
+
+// Clear all customers
+function clearCustomers(){
+	indexedDB.deleteDatabase('customermanager');
+	window.location.href="index.html";
+}
+
+
+
+
